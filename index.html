@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>tDCS Controller Application</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #eef2f7;
+      padding: 30px;
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+      color: #333;
+    }
+    select, input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    input[readonly] {
+      background-color: #f9f9f9;
+    }
+    button {
+      margin-top: 25px;
+      width: 100%;
+      padding: 12px;
+      background: #007bff;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 15px;
+      background: #eafaea;
+      padding: 12px;
+      border-left: 5px solid green;
+    }
+  </style>
+</head>
+<body>
+  <h1>tDCS Controller Application</h1>
+  <div class="container">
+    <form id="tdcsForm">
+      <label for="mode">স্টিমুলেশন মোড:</label>
+      <select id="mode">
+        <option value="memory">স্মৃতি এবং শিখন</option>
+        <option value="focus">মনোযোগ ও ফোকাস</option>
+        <option value="mood">মুড রেগুলেশন</option>
+        <option value="pain">ব্যথা ব্যবস্থাপনা</option>
+        <option value="social">সামাজিক সম্পর্ক</option>
+        <option value="creativity">সৃজনশীলতা</option>
+        <option value="anxiety">উদ্বেগ নিয়ন্ত্রণ</option>
+      </select>
+
+      <label for="region">টার্গেট মস্তিষ্ক অঞ্চল:</label>
+      <input type="text" id="region" readonly />
+
+      <label for="current">কারেন্ট (mA):</label>
+      <input type="number" id="current" min="1" max="2" required />
+
+      <label for="duration">সময়সীমা (মিনিট):</label>
+      <input type="number" id="duration" min="5" max="30" value="10" required />
+
+      <label for="polarity">পোলারিটি:</label>
+      <select id="polarity">
+        <option value="anodal">Anodal</option>
+        <option value="cathodal">Cathodal</option>
+      </select>
+
+      <button type="submit">স্টিমুলেশন শুরু করুন</button>
+    </form>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const modeInfo = {
+      memory: {
+        region: "Dorsolateral Prefrontal Cortex (DLPFC)",
+        current: 1.5,
+        polarity: "anodal"
+      },
+      focus: {
+        region: "Prefrontal Cortex (PFC)",
+        current: 1.5,
+        polarity: "anodal"
+      },
+      mood: {
+        region: "Left DLPFC",
+        current: 2,
+        polarity: "anodal"
+      },
+      pain: {
+        region: "Somatosensory Cortex",
+        current: 1.5,
+        polarity: "anodal"
+      },
+      social: {
+        region: "Orbitofrontal Cortex (OFC)",
+        current: 1,
+        polarity: "anodal"
+      },
+      creativity: {
+        region: "Temporal / Parietal Cortex",
+        current: 1.5,
+        polarity: "anodal"
+      },
+      anxiety: {
+        region: "Right DLPFC",
+        current: 1.5,
+        polarity: "cathodal"
+      }
+    };
+
+    const modeSelect = document.getElementById('mode');
+    const regionInput = document.getElementById('region');
+    const currentInput = document.getElementById('current');
+    const polaritySelect = document.getElementById('polarity');
+
+    modeSelect.addEventListener('change', function() {
+      const selected = modeSelect.value;
+      const info = modeInfo[selected];
+      regionInput.value = info.region;
+      currentInput.value = info.current;
+      polaritySelect.value = info.polarity;
+    });
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', () => {
+      modeSelect.dispatchEvent(new Event('change'));
+    });
+
+    document.getElementById('tdcsForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const mode = modeSelect.value;
+      const current = currentInput.value;
+      const duration = document.getElementById('duration').value;
+      const polarity = polaritySelect.value;
+
+      const url = `http://tdcs.local/start?mode=${mode}&current=${current}&duration=${duration}&polarity=${polarity}`;
+
+      fetch(url)
+        .then(res => res.text())
+        .then(data => {
+          document.getElementById('result').innerHTML = data;
+        })
+        .catch(err => {
+          document.getElementById('result').innerHTML = "ডিভাইসের সাথে সংযোগ ব্যর্থ।";
+        });
+    });
+  </script>
+</body>
+</html>
